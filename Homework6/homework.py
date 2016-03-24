@@ -1,17 +1,17 @@
 from scipy.signal import firwin2, lfilter, freqz
 
-from pylab import plot, figure
+from pylab import plot, figure, show, legend
 
 from numpy import pi, linspace, sin
 
 from numpy.fft import fft
 
-ORDER = 125
+ORDER = 75
 
 
-def signal(f_sample, f_list):
+def signal(sample_freq, f_list):
     result = 0
-    t = linspace(0, 1, f_sample)
+    t = linspace(0, 1, sample_freq)
     for freq in f_list:
         result += sin(2 * pi * freq * t)
     return result
@@ -44,20 +44,21 @@ def multiple_bandpass_fir_filter(intervals, f_max, order=ORDER):
 
     return firwin2(order, freq, gain)
 
-
+f_sample = 200
 sin_list = [15, 40, 60, 90]
-fir_filter = multiple_bandpass_fir_filter([(40, 60)], max(sin_list))
+fir_filter = multiple_bandpass_fir_filter([(40, 60)], f_sample / 2)
 w, h = freqz(fir_filter)
 
 figure("Filter")
 plot(w / pi, abs(h))
 
-test_signal = signal(200, sin_list)
-s = fft(test_signal)
-figure("Before filtration")
-plot(abs(s)[1: len(s) / 2])
-
+test_signal = signal(f_sample, sin_list)
+signal_fourier = fft(test_signal)
 filtered_signal = lfilter(fir_filter, 1, test_signal)
-s = fft(filtered_signal)
-figure("After filtration")
-plot(abs(s)[1: len(s) / 2])
+filtered_signal_fourier = fft(filtered_signal)
+
+figure("Signal")
+plot(abs(signal_fourier[0:len(signal_fourier) / 2]), color='blue', label='After filtration')
+plot(abs(filtered_signal_fourier[0:len(filtered_signal_fourier) / 2]), color='red', label='Before filtration')
+legend()
+show()
